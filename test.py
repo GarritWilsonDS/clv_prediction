@@ -1,5 +1,5 @@
-#from modules.modules import clean_dataframe
-import tkinter as tk
+from modules.modules import test_function
 
 if __name__ == "__main__":
-    print("import worked yo")
+    
+    test_function()

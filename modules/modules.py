@@ -1,4 +1,3 @@
-from tkinter.tix import InputOnly
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,3 +27,6 @@ def clean_dataframe(df):
     
     return df
 
+
+def test_function():
+    print("hello")
