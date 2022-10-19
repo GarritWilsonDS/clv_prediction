@@ -20,13 +20,12 @@ def clean_dataframe(df):
     num_cols = df.select_dtypes(include=["int64", "float64"]).columns
     
     for col in num_cols:
-        df[col] = df[df[col] < df[col].quantile(0.99)]
-    
+        
+        mask = df[col] > df[col].quantile(0.99)
+
+        df.drop(df[mask].index, inplace=True)
+        
     ## changing datatype for InvoiceDate
     df["InvoiceDate"] = pd.to_datetime(df.InvoiceDate)
     
     return df
-
-
-def test_function():
-    print("hello")
