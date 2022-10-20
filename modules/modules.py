@@ -29,6 +29,9 @@ def clean_dataframe(df):
     ## changing datatype for InvoiceDate
     df["InvoiceDate"] = pd.to_datetime(df.InvoiceDate)
     
+    ## creating revenue column
+    df["Revenue"] = df["Quantity"] * df["UnitPrice"]
+    
     return df
 
 def clustering(data=None, k=None, column=None):

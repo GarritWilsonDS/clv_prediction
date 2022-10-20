@@ -26,7 +26,11 @@ if csv_data:
     
     original_len = dataframe.shape[0]
     
-    st.text("Dataframe:")
+    st.text('')
+    st.text('')
+    st.text('')
+    
+    st.markdown("##### Original Dataframe:")
     st.dataframe(data=dataframe.head())
         
     df = clean_dataframe(dataframe)
@@ -34,7 +38,6 @@ if csv_data:
     st.text('')
     st.text('')
     st.text('')
-    st.text(f'New length of dataframe: {df.shape[0]}.')
 
     ## segmenting data into 3 and 6 month dataframes.
     ## 3 Months of data will be used to forecast CLV over the following 6 months.
@@ -61,4 +64,39 @@ if csv_data:
     
     user_df = pd.merge(recency_df, user_df, on= "CustomerID") 
     
+    ## creating Frequency Metric
+    frequency_df = pd.DataFrame(data_3m.groupby("CustomerID")["InvoiceDate"].count().reset_index())
+    frequency_df.columns = ["CustomerID", "Frequency"]
+    
+    frequency_df = clustering(data= frequency_df,
+                              k= 5,
+                              column= "Frequency")
+    
+    frequency_df = order_clusters(data= frequency_df,
+                                  column= "FrequencyCluster",
+                                  target= "Frequency",
+                                  ascending= True)
+    
+    user_df = pd.merge(frequency_df, user_df, on= "CustomerID")
+    
+    ## creating Revenue Metric
+    revenue_df = pd.DataFrame(data_3m.groupby("CustomerID")["Revenue"].sum().reset_index())
+    revenue_df.columns = ["CustomerID", "Revenue"]
+    
+    revenue_df = clustering(data= revenue_df,
+                            k= 5,
+                            column= "Revenue")
+    
+    revenue_df = order_clusters(data= revenue_df,
+                                column= "RevenueCluster",
+                                target= "Revenue",
+                                ascending= True)
+    
+    user_df = pd.merge(revenue_df, user_df, on= "CustomerID")
+    
+    st.markdown("##### Final Dataframe used for prediction:")
+    st.text('''This dataframe contains the predictive variables Recency, Frequency, and Revenue, 
+per unique customer.''')
+    
     st.dataframe(data= user_df.head())
+    
