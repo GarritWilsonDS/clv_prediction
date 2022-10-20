@@ -1,4 +1,5 @@
 from modules.modules import clean_dataframe
+from datetime import datetime, timedelta, date
 
 import streamlit as st
 import pandas as pd
@@ -36,5 +37,20 @@ if csv_data:
     st.text('')
     st.text(f'New length of dataframe: {df.shape[0]}.')
 
-
-    ## ...
+    ## segmenting data into 3 and 6 month dataframes.
+    ## 3 Months of data will be used to forecast CLV over the following 6 months.
+    data_3m = df[(df.InvoiceDate.dt.date < date(2011,6,1)) & (df.InvoiceDate.dt.date >= date(2011,3,1))].reset_index()
+    data_6m = df[(df.InvoiceDate.dt.date >= date(2011,6,1)) & (df.InvoiceDate.dt.date < date(2011,12,1))].reset_index()
+    
+    user_df = pd.DataFrame(data_3m.CustomerID.unique(), columns= ["CustomerID"])
+    
+    ## creating Recency Metric
+    recency_df = pd.DataFrame(data_3m.groupby("CustomerID")["InvoiceDate"].max().reset_index())
+    recency_df.columns = ["CustomerID", "LatestPurchase"]
+    
+    recency_df["Recency"] = (data_3m["InvoiceDate"].max() - recency_df["LatestPurchase"]).dt.days
+    recency_df.drop("LatestPurchase", axis= 1, inplace= True)
+    
+    user_df = pd.merge(recency_df, user_df, on= "CustomerID") 
+    
+    st.dataframe(data= user_df.head())

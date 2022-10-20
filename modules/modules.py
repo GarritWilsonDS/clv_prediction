@@ -29,3 +29,6 @@ def clean_dataframe(df):
     df["InvoiceDate"] = pd.to_datetime(df.InvoiceDate)
     
     return df
+
+def segmentation():
+    pass
