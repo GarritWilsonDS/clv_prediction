@@ -1,4 +1,4 @@
-from modules.modules import clean_dataframe
+from modules.modules import clean_dataframe, clustering
 from datetime import datetime, timedelta, date
 
 import streamlit as st
@@ -50,6 +50,10 @@ if csv_data:
     
     recency_df["Recency"] = (data_3m["InvoiceDate"].max() - recency_df["LatestPurchase"]).dt.days
     recency_df.drop("LatestPurchase", axis= 1, inplace= True)
+    
+    recency_df = clustering(data = recency_df,
+                            k = 3,
+                            column="Recency")
     
     user_df = pd.merge(recency_df, user_df, on= "CustomerID") 
     

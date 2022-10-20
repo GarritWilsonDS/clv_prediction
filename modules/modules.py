@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import math
 
 from datetime import datetime, timedelta, date
+from sklearn.cluster import KMeans
 
 def clean_dataframe(df):
     '''Function to clean dataframe from missing data, outliers, duplicates,
@@ -30,5 +31,17 @@ def clean_dataframe(df):
     
     return df
 
-def segmentation():
-    pass
+def clustering(k=None, data=None, column=None):
+    '''This function clusters data of a given column,
+    and returns the dataframe with the cluster predictions.'''
+    
+    kmeans = KMeans(n_clusters = k,
+                    max_iter= 1000)
+    
+    kmeans.fit(data[[column]])
+    
+    new_column = column + "Cluster"
+    
+    data[new_column] = kmeans.predict(data[[column]])
+    
+    return data
