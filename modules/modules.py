@@ -31,7 +31,7 @@ def clean_dataframe(df):
     
     return df
 
-def clustering(k=None, data=None, column=None):
+def clustering(data=None, k=None, column=None):
     '''This function clusters data of a given column,
     and returns the dataframe with the cluster predictions.'''
     
@@ -45,3 +45,23 @@ def clustering(k=None, data=None, column=None):
     data[new_column] = kmeans.predict(data[[column]])
     
     return data
+
+def order_clusters(data=None, column=None, target=None, ascending=None):
+    '''This function orders the clusters of a given dataframe,
+    so that cluster names are not a nominal variable but ordinal.'''
+    
+    new_column = "new_" + column 
+    
+    df = data.groupby(column)[target].mean().reset_index()
+    
+    df = df.sort_values(by=target, ascending=ascending)
+    
+    df["index"] = df.index
+    
+    df_final = pd.merge(data, df[[column, "index"]], on=column)
+    
+    df_final.drop([column], axis=1, inplace=True)
+    
+    df_final = df_final.rename(columns={"index": column})
+    
+    return df_final

@@ -1,4 +1,4 @@
-from modules.modules import clean_dataframe, clustering
+from modules.modules import clean_dataframe, clustering, order_clusters
 from datetime import datetime, timedelta, date
 
 import streamlit as st
@@ -26,8 +26,7 @@ if csv_data:
     
     original_len = dataframe.shape[0]
     
-    st.text(f"{type(dataframe)}")
-    
+    st.text("Dataframe:")
     st.dataframe(data=dataframe.head())
         
     df = clean_dataframe(dataframe)
@@ -51,9 +50,14 @@ if csv_data:
     recency_df["Recency"] = (data_3m["InvoiceDate"].max() - recency_df["LatestPurchase"]).dt.days
     recency_df.drop("LatestPurchase", axis= 1, inplace= True)
     
-    recency_df = clustering(data = recency_df,
-                            k = 3,
+    recency_df = clustering(data= recency_df,
+                            k= 3,
                             column="Recency")
+    
+    recency_df = order_clusters(data= recency_df,
+                                column= "RecencyCluster",
+                                target= "Recency",
+                                ascending= False)
     
     user_df = pd.merge(recency_df, user_df, on= "CustomerID") 
     
