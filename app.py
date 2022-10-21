@@ -1,8 +1,9 @@
-from modules.modules import clean_dataframe, clustering, order_clusters
+from modules.modules import clean_dataframe, clustering, order_clusters, data_prep, modeling
 from datetime import datetime, timedelta, date
 
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 st.markdown("# Customer Lifetime Value Prediction")
 
@@ -99,4 +100,26 @@ if csv_data:
 per unique customer.''')
     
     st.dataframe(data= user_df.head())
+    
+    ## calculating 6-months lifetime value
+    lv_df = pd.DataFrame(data_6m.groupby("CustomerID")["Revenue"].sum().reset_index())
+    lv_df.columns = ["CustomerID", "LifetimeValue"]
+    
+    ## merge predictive dataframe and 6-months lifetime value dataframe
+    df_scaled = pd.merge(user_df, lv_df, on= "CustomerID", how= "left")
+    df_scaled.dropna(inplace=True)
+    
+    ## data preparation (scaling, encoding)
+    df_prep = data_prep(df_scaled)
+    
+    ## modeling and prediction
+    df_pred = modeling(df_scaled)
+    
+    ## plotting predicted LTV vs. actual LTV
+    # img = plt.plot(df_pred["LifetimeValue", "Predicted_LTV"])
+    
+    # st.img(img) 
+    
+    st.dataframe(data=df_pred.head())
+    
     

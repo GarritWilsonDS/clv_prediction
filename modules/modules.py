@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import xgboost as xgb
 
 from datetime import datetime, timedelta, date
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import RobustScaler
 
 def clean_dataframe(df):
     '''Function to clean dataframe from missing data, outliers, duplicates,
@@ -68,3 +70,34 @@ def order_clusters(data=None, column=None, target=None, ascending=None):
     df_final = df_final.rename(columns={"index": column})
     
     return df_final
+
+def data_prep(df):
+    '''This function applies scaling and encoding to features, 
+    for the step of modeling and predicting.'''
+    
+    for col in ["Recency", "Frequency", "Revenue"]:
+    
+        scaler = RobustScaler()
+        
+        scaler.fit(df[[col]])
+        
+        df[col] = scaler.transform(df[[col]])
+    
+    return df
+
+def modeling(df):
+    '''This function fits an XGBRegressor algorithm to the data,
+    and predicts the lifetime value per Customer.'''
+    
+    X = df.drop(["CustomerID", "LifetimeValue"], axis= 1)
+    y= df["LifetimeValue"]
+    
+    xgb_regressor = xgb.XGBRegressor()
+    
+    xgb_regressor.fit(X,y)
+    
+    df["Predicted_LTV"] = xgb_regressor.predict(X)
+    
+    return df
+    
+    
