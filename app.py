@@ -1,4 +1,5 @@
-from modules.modules import clean_dataframe, clustering, order_clusters, data_prep, modeling
+from modules.modules import (clean_dataframe, clustering, 
+                             order_clusters, data_prep, modeling, plot_predictions, predict)
 from datetime import datetime, timedelta, date
 
 import streamlit as st
@@ -113,21 +114,39 @@ per unique customer.''')
     df_prep = data_prep(df_scaled)
     
     ## modeling and prediction
-    df_pred = modeling(df_scaled)
+    dataframe, data_split, _ = modeling(df_scaled)
     
-    ## plotting predicted LTV vs. actual LTV
-    # img = plt.plot(df_pred["LifetimeValue", "Predicted_LTV"])
+    X_train, X_test, y_train, y_test = data_split[0], data_split[1], data_split[2], data_split[3]
     
-    # st.img(img) 
+    model, rmse = _
     
+    ## making predictions on test data
+    df_pred = predict(X_test, y_test, model).reset_index()
+    
+    plot_predictions(df_pred)
 
     st.text('')
     st.text('')
     st.text('')
     
     st.markdown("##### Final Dataframe including predictions:")
-    st.text('''This dataframe contains the predicted lifetime value per unique customer.''')
+    st.text('''This dataframe contains the predicted lifetime value per unique customer contained in the test data.''')
     
     st.dataframe(data=df_pred.head())
+    
+    st.text('')
+    st.text('')
+    st.text('')
+    
+    st.markdown("##### Plotting Actual vs. Predicted LTV for 50 Random Customers")
+    st.image("imgs/plotted_predictions.png")
+    st.text(f'Root Mean Squared Error: {rmse}')
+    
+    st.text('')
+    st.text('')
+    st.text('')
+    st.text('Comparing the RMSE to the distribution of LTV over the all customers.')
+    st.dataframe(df_prep["LifetimeValue"].describe())
+    
     
     

@@ -90,8 +90,8 @@ def modeling(df):
     '''This function fits an XGBRegressor algorithm to the data,
     and predicts the lifetime value per Customer.'''
     
-    X = df.drop(["CustomerID", "6m_Revenue", "LTVCluster"], axis= 1)
-    y= df["6m_Revenue"]
+    X = df.drop(["CustomerID", "LifetimeValue"], axis= 1)
+    y= df["LifetimeValue"]
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.25)
     
@@ -105,11 +105,11 @@ def modeling(df):
                                cv= 5,
                                scoring= ["neg_mean_squared_error"])
     
-    score = abs(cv_results["test_neg_mean_squared_error"].mean())
+    mse = abs(cv_results["test_neg_mean_squared_error"].mean())
     
-    print(f'RMSE of XGBRegressor: {math.sqrt(score)}')
+    rmse = round(math.sqrt(mse), 2)
     
-    return df, (X_train, X_test, y_train, y_test), xgb_regressor
+    return df, (X_train, X_test, y_train, y_test), (xgb_regressor, rmse)
     
 
 def predict(X_test, y_test, model):
@@ -124,4 +124,26 @@ def predict(X_test, y_test, model):
     predicted_ltv= predicted_ltv[["CustomerID", "Actual_LTV", "Predicted_LTV"]]
 
     return predicted_ltv
+
+def plot_predictions(df):
+    '''This function takes a random sample of customers from the predicted test data,
+    and plots y_pred vs. y_true.'''
+    
+    sample = df.sample(n=50)
+    
+    X= sample["CustomerID"]
+    Y1 = sample["Predicted_LTV"]
+    Y2 = sample["Actual_LTV"]
+
+    X_axis = np.arange(len(X))
+
+    plt.figure(figsize=(20,10))
+    plt.bar(X_axis - 0.2, Y1, 0.4, label = 'Predicted LTV')
+    plt.bar(X_axis + 0.2, Y2, 0.4, label = 'Real LTV')
+
+    plt.title("Actual vs. Predicted Lifetime Value for 100 Random Customers", size= 20)
+    plt.ylabel('LTV', size= 15)
+    plt.legend()
+    
+    plt.savefig("imgs/plotted_predictions.png")
     
