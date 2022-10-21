@@ -120,6 +120,14 @@ per unique customer.''')
     
     # st.img(img) 
     
+
+    st.text('')
+    st.text('')
+    st.text('')
+    
+    st.markdown("##### Final Dataframe including predictions:")
+    st.text('''This dataframe contains the predicted lifetime value per unique customer.''')
+    
     st.dataframe(data=df_pred.head())
     
     
