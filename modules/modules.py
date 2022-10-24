@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import xgboost as xgb
+import plotly.express as px
 
 from datetime import datetime, timedelta, date
 from sklearn.cluster import KMeans
@@ -71,6 +72,23 @@ def order_clusters(data=None, column=None, target=None, ascending=None):
     df_final = df_final.rename(columns={"index": column})
     
     return df_final
+
+def make_scatter3d(dataframe):
+    
+    df = dataframe.copy()
+    
+    
+    for col in ["Frequency", "Recency", "Revenue"]:
+
+        mask = df[col] > df[col].quantile(0.99)
+
+        df.drop(df[mask].index, inplace=True)
+
+    ## plotting with plotly
+    fig = px.scatter_3d(df, x='Frequency', y='Recency', z='Revenue', color= "OverallScore",
+                    size_max=2, opacity= 0.6)
+
+    return fig
 
 def data_prep(df):
     '''This function applies scaling and encoding to features, 

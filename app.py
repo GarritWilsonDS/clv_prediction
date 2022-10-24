@@ -1,10 +1,12 @@
-from modules.modules import (clean_dataframe, clustering, 
+from curses import use_default_colors
+from modules.modules import (clean_dataframe, clustering, make_scatter3d, 
                              order_clusters, data_prep, modeling, plot_predictions, predict)
 from datetime import datetime, timedelta, date
 
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.markdown("# Customer Lifetime Value Prediction")
 
@@ -96,11 +98,16 @@ if csv_data:
     
     user_df = pd.merge(revenue_df, user_df, on= "CustomerID")
     
-    st.markdown("##### Final Dataframe used for prediction:")
-    st.text('''This dataframe contains the predictive variables Recency, Frequency, and Revenue, 
-per unique customer.''')
+    user_df["OverallScore"] = user_df["RecencyCluster"] + user_df["FrequencyCluster"] + user_df["RevenueCluster"]
     
-    st.dataframe(data= user_df.head())
+    
+    ## plotting customer segmentation in 3d plotly scatterplot
+    plot = make_scatter3d(user_df)
+    
+    st.text('')
+    st.text('')
+    st.text('')
+    st.plotly_chart(plot, sharing= "streamlit")
     
     ## calculating 6-months lifetime value
     lv_df = pd.DataFrame(data_6m.groupby("CustomerID")["Revenue"].sum().reset_index())
@@ -124,15 +131,6 @@ per unique customer.''')
     df_pred = predict(X_test, y_test, model).reset_index()
     
     plot_predictions(df_pred)
-
-    st.text('')
-    st.text('')
-    st.text('')
-    
-    st.markdown("##### Final Dataframe including predictions:")
-    st.text('''This dataframe contains the predicted lifetime value per unique customer contained in the test data.''')
-    
-    st.dataframe(data=df_pred.head())
     
     st.text('')
     st.text('')
