@@ -107,6 +107,7 @@ if csv_data:
     st.text('')
     st.text('')
     st.text('')
+    st.markdown("##### Plotting the customer segmentation:")
     st.plotly_chart(plot, sharing= "streamlit")
     
     ## calculating 6-months lifetime value
@@ -140,11 +141,6 @@ if csv_data:
     st.image("imgs/plotted_predictions.png")
     st.text(f'Root Mean Squared Error: {rmse}')
     
-    st.text('')
-    st.text('')
-    st.text('')
-    st.text('Comparing the RMSE to the distribution of LTV over the all customers.')
-    st.dataframe(df_prep["LifetimeValue"].describe())
     
     
     
