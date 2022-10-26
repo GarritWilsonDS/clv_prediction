@@ -16,7 +16,7 @@ st.text('')
 
 st.markdown("Please upload transaction data here:")
 st.markdown("Please make sure the dataframe contains the following columns: ")
-st.markdown("'CustomerID', 'Revenue' &  'InvoiceDate'")
+st.markdown("'CustomerID', 'Revenue' & 'InvoiceDate'")
 
 
 st.text('')
@@ -30,8 +30,6 @@ csv_data = st.file_uploader("Transaction Data")
 if csv_data:
     
     dataframe = pd.read_csv(csv_data, encoding= 'unicode_escape')
-    
-    original_len = dataframe.shape[0]
     
     st.text('')
     st.text('')
