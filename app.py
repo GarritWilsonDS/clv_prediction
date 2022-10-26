@@ -16,7 +16,7 @@ st.text('')
 
 st.markdown("Please upload transaction data here:")
 st.markdown("Please make sure the dataframe contains the following columns: ")
-st.markdown("'CustomerID', 'Quantity', 'InvoiceDate' & 'UnitPrice'")
+st.markdown("'CustomerID', 'Revenue' &  'InvoiceDate'")
 
 
 st.text('')
