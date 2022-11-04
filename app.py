@@ -1,6 +1,8 @@
 from curses import use_default_colors
-from modules.modules import (clean_dataframe, clustering, make_scatter3d, 
-                             order_clusters, data_prep, modeling, plot_predictions, predict)
+from modules.cleaning import clean_dataframe
+from modules.features import clustering, segment_data, order_clusters, create_features_and_target
+from modules.plotting import make_scatter3d, plot_predictions
+from modules.ml import data_prep, modeling, predict
 from datetime import datetime, timedelta, date
 
 import streamlit as st
@@ -29,33 +31,37 @@ csv_data = st.file_uploader("Transaction Data")
 
 if csv_data:
     
-    dataframe = pd.read_csv(csv_data, encoding= 'unicode_escape')
+    data = pd.read_csv(csv_data, encoding= 'unicode_escape')
+    data = data.loc[data['InvoiceDate'] < '2011-12-01']
     
     st.text('')
     st.text('')
     st.text('')
     
     st.markdown("##### Original Dataframe:")
-    st.dataframe(data=dataframe.head())
+    st.dataframe(data=data.head())
         
-    df = clean_dataframe(dataframe)
+    df = clean_dataframe(data)
 
     st.text('')
     st.text('')
     st.text('')
 
-    ## segmenting data into 3 and 6 month dataframes.
-    ## 3 Months of data will be used to forecast CLV over the following 6 months.
-    data_3m = df[(df.InvoiceDate.dt.date < date(2011,6,1)) & (df.InvoiceDate.dt.date >= date(2011,3,1))].reset_index()
-    data_6m = df[(df.InvoiceDate.dt.date >= date(2011,6,1)) & (df.InvoiceDate.dt.date < date(2011,12,1))].reset_index()
+    ## segmenting data into 3 - month bins and selecting all but last one
+    tmp = segment_data(df, clv_freq='3M')
     
-    user_df = pd.DataFrame(data_3m.CustomerID.unique(), columns= ["CustomerID"])
+    date = pd.to_datetime(sorted(tmp['InvoiceDate'].unique(), reverse=True)[1]).date()
+    
+    dataframe = df.loc[df["InvoiceDate"].dt.date <= date]
+    
+    
+    user_df = pd.DataFrame(dataframe.CustomerID.unique(), columns= ["CustomerID"])
     
     ## creating Recency Metric
-    recency_df = pd.DataFrame(data_3m.groupby("CustomerID")["InvoiceDate"].max().reset_index())
+    recency_df = pd.DataFrame(dataframe.groupby("CustomerID")["InvoiceDate"].max().reset_index())
     recency_df.columns = ["CustomerID", "LatestPurchase"]
     
-    recency_df["Recency"] = (data_3m["InvoiceDate"].max() - recency_df["LatestPurchase"]).dt.days
+    recency_df["Recency"] = (dataframe["InvoiceDate"].max() - recency_df["LatestPurchase"]).dt.days
     recency_df.drop("LatestPurchase", axis= 1, inplace= True)
     
     recency_df = clustering(data= recency_df,
@@ -70,7 +76,7 @@ if csv_data:
     user_df = pd.merge(recency_df, user_df, on= "CustomerID") 
     
     ## creating Frequency Metric
-    frequency_df = pd.DataFrame(data_3m.groupby("CustomerID")["InvoiceDate"].count().reset_index())
+    frequency_df = pd.DataFrame(dataframe.groupby("CustomerID")["InvoiceDate"].count().reset_index())
     frequency_df.columns = ["CustomerID", "Frequency"]
     
     frequency_df = clustering(data= frequency_df,
@@ -85,7 +91,7 @@ if csv_data:
     user_df = pd.merge(frequency_df, user_df, on= "CustomerID")
     
     ## creating Revenue Metric
-    revenue_df = pd.DataFrame(data_3m.groupby("CustomerID")["Revenue"].sum().reset_index())
+    revenue_df = pd.DataFrame(dataframe.groupby("CustomerID")["Revenue"].sum().reset_index())
     revenue_df.columns = ["CustomerID", "Revenue"]
     
     revenue_df = clustering(data= revenue_df,
@@ -110,20 +116,28 @@ if csv_data:
     st.text('')
     st.markdown("##### Plotting the customer segmentation:")
     st.plotly_chart(plot, sharing= "streamlit")
+
+    ## Segmenting data into 3-months bins and create features 
+    df_data = segment_data(df, clv_freq='3M')
     
-    ## calculating 6-months lifetime value
-    lv_df = pd.DataFrame(data_6m.groupby("CustomerID")["Revenue"].sum().reset_index())
-    lv_df.columns = ["CustomerID", "LifetimeValue"]
+    st.dataframe(data=df_data.head())
+    st.markdown('### ACHTUNG: hier stimmt was nicht, M_4 und M_5 fehlen.')
     
-    ## merge predictive dataframe and 6-months lifetime value dataframe
-    df_scaled = pd.merge(user_df, lv_df, on= "CustomerID", how= "left")
-    df_scaled.dropna(inplace=True)
+    df_final = create_features_and_target(df_data)
+    
+    st.dataframe(data=df_final.head())
+    
+    ## merging dataframes
+    final_dataframe = pd.merge(df_final, user_df, left_on= "CustomerID", right_on= "CustomerID", how="left")
+    
+#    st.dataframe(data=final_dataframe.head())
+
     
     ## data preparation (scaling, encoding)
-    df_prep = data_prep(df_scaled)
+    df_prep = data_prep(final_dataframe)
     
     ## modeling and prediction
-    dataframe, data_split, _ = modeling(df_scaled)
+    dataframe, data_split, _ = modeling(df_prep)
     
     X_train, X_test, y_train, y_test = data_split[0], data_split[1], data_split[2], data_split[3]
     
