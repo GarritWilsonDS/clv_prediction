@@ -1,4 +1,3 @@
-from curses import use_default_colors
 from modules.cleaning import clean_dataframe
 from modules.features import clustering, segment_data, order_clusters, create_features_and_target
 from modules.plotting import make_scatter3d, plot_predictions
